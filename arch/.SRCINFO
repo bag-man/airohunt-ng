@@ -1,0 +1,18 @@
+pkgbase = airohunt-ng
+	pkgdesc = 802.11 monitor-mode Wi-Fi signal tracker with terminal UI
+	pkgver = 1.0.0
+	pkgrel = 1
+	url = https://github.com/bag-man/airohunt-ng
+	arch = any
+	license = GPL-3.0-or-later
+	makedepends = python-build
+	makedepends = python-installer
+	makedepends = python-wheel
+	makedepends = python-setuptools
+	depends = python
+	depends = tcpdump
+	depends = iw
+	source = airohunt-ng-1.0.0.tar.gz::https://github.com/bag-man/airohunt-ng/archive/v1.0.0.tar.gz
+	sha256sums = SKIP
+
+pkgname = airohunt-ng
