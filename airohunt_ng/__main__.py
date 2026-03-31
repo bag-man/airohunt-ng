@@ -1027,6 +1027,7 @@ Examples:
         parser.error(f"invalid MAC address: {args.bssid!r}")
 
     # ── Channel list ──────────────────────────────────────────────────────────
+    global CHANNELS
     if args.channel:
         CHANNELS = [args.channel]
     elif args.band == "5":
