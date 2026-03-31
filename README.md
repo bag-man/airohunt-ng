@@ -1,25 +1,21 @@
 # airohunt-ng
 
+> [!CAUTION]
+> This software was almost entirely written by Claude.ai Sonnet 4.6
+
 A terminal-based 802.11 Wi-Fi signal tracker for Linux that runs in monitor mode.
 
 Displays access points, connected clients, and probe requests in a live three-pane
 interface, and lets you select any device to track its signal strength over time on
 a real-time graph.
 
-```
-[CH  1]   22 APs   11 clients   8 probes       h/l: pane  j/k: scroll  enter: select
-
-┌─── Access Points ────────────┬─── Connected Clients ────────┬─── Probes ──────────┐
-│ BSSID             PWR  BEAC  │ MAC               PWR  PKTS  │ MAC               …  │
-│ BC:0F:9A:17:9E:EC -38   402  │ 00:C0:CA:B8:F2:22 -37   810  │ EE:59:6A:43:4A:44 …  │
-│ ...                          │ ...                          │ ...                   │
-```
+![Scanner](interface1.png)
+![Tracker](interface2.png)
 
 ## Requirements
-
-- Linux with a wireless adapter that supports monitor mode
-- `tcpdump` — packet capture (`apt install tcpdump` / `pacman -S tcpdump`)
-- `iw` — channel control (`apt install iw` / `pacman -S iw`)
+- monitor mode capable wireless interface
+- tcpdump
+- iw
 - Python 3.8+
 
 ## Installation
