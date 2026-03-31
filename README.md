@@ -9,8 +9,8 @@ Displays access points, connected clients, and probe requests in a live three-pa
 interface, and lets you select any device to track its signal strength over time on
 a real-time graph.
 
-![Scanner](interface1.png)
-![Tracker](interface2.png)
+![Scanner](screenshots/interface1.png)
+![Tracker](screenshots/interface2.png)
 
 ## Requirements
 - monitor mode capable wireless interface
