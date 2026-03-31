@@ -975,7 +975,7 @@ def run_app(stdscr, iface, panes):
 
 # ── Entry point ───────────────────────────────────────────────────────────────
 
-if __name__ == "__main__":
+def main():
     import argparse
 
     parser = argparse.ArgumentParser(
@@ -985,7 +985,7 @@ if __name__ == "__main__":
         epilog="""
 Examples:
   sudo airohunt-ng wlan0
-  sudo airohunt-ng wlan0 --band 5 -AC                  
+  sudo airohunt-ng wlan0 --band 5 -AC
   sudo airohunt-ng wlan0 -c 6 --bssid BC:0F:9A:17:9E:EC
         """,
     )
@@ -1068,15 +1068,6 @@ Examples:
             curses.wrapper(run_app, args.interface, panes)
     except KeyboardInterrupt:
         pass
-
-
-def main():
-    """Console-script entry point — delegates to the argparse / curses main block."""
-    import sys
-    # Re-run this module as __main__ so the `if __name__ == "__main__":` block fires.
-    import runpy
-    runpy.run_module("airohunt_ng", run_name="__main__", alter_sys=True)
-
 
 if __name__ == "__main__":
     main()

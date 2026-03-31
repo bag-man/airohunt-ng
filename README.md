@@ -30,14 +30,12 @@ pip install airohunt-ng
 
 ```bash
 yay -S airohunt-ng
-# or
-paru -S airohunt-ng
 ```
 
 ### From source
 
 ```bash
-git clone https://github.com/YOURUSERNAME/airohunt-ng
+git clone https://github.com/bag-man/airohunt-ng
 cd airohunt-ng
 pip install .
 ```
