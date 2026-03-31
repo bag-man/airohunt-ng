@@ -1,6 +1,6 @@
 # Maintainer: bag-man <garland.owen@gmail.com>
 pkgname=airohunt-ng
-pkgver=1.0.0
+pkgver=1.0.1
 pkgrel=1
 pkgdesc="802.11 monitor-mode Wi-Fi signal tracker with terminal UI"
 arch=('any')
@@ -9,7 +9,7 @@ license=('GPL-3.0-or-later')
 depends=('python' 'tcpdump' 'iw')
 makedepends=('python-build' 'python-installer' 'python-wheel' 'python-setuptools')
 source=("$pkgname-$pkgver.tar.gz::$url/archive/v$pkgver.tar.gz")
-sha256sums=('47a42dd397344bc2a8e0f9886f16291fb765adf7785e992d01dd08986c2d3b0c')  # replace with actual sha256 after first release
+sha256sums=('250e19b63b56717a5f577f3d655579aa6346afd0c78aa5c3482382c30fd671fe')  # replace with actual sha256 after first release
 
 build() {
     cd "$pkgname-$pkgver"

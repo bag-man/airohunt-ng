@@ -13,6 +13,6 @@ pkgbase = airohunt-ng
 	depends = tcpdump
 	depends = iw
 	source = airohunt-ng-1.0.0.tar.gz::https://github.com/bag-man/airohunt-ng/archive/v1.0.0.tar.gz
-	sha256sums = 47a42dd397344bc2a8e0f9886f16291fb765adf7785e992d01dd08986c2d3b0c
+	sha256sums = 250e19b63b56717a5f577f3d655579aa6346afd0c78aa5c3482382c30fd671fe
 
 pkgname = airohunt-ng
