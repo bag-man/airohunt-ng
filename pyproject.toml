@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name            = "airohunt-ng"
-version         = "1.0.3"
+version         = "1.0.4"
 description     = "802.11 monitor-mode Wi-Fi signal tracker with terminal UI"
 readme          = "README.md"
 license         = { text = "GPL-3.0-or-later" }
@@ -33,7 +33,7 @@ classifiers = [
 dependencies = []
 
 [project.scripts]
-airohunt-ng = "airohunt_ng.__main__:main"
+airohunt-ng = "src.__main__:main"
 
 [project.urls]
 Homepage   = "https://github.com/bag-man/airohunt-ng"
@@ -42,4 +42,4 @@ Repository = "https://github.com/bag-man/airohunt-ng"
 
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["airohunt_ng*"]
+include = ["src*"]
