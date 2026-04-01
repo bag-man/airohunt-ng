@@ -457,6 +457,13 @@ class Scanner(threading.Thread):
     def stop(self):
         self._stop_evt.set()
 
+    def restart(self):
+        """Spawn a new worker thread, preserving all captured data."""
+        self._stop_evt.clear()
+        t = threading.Thread(target=self.run, daemon=True)
+        t.start()
+        return t
+
     def clear(self):
         with self._lock:
             self._nets.clear()
@@ -940,6 +947,8 @@ def run_app(stdscr, iface, panes):
             if result is None:
                 break
 
+            # Stop channel-hopping while the Poller locks the card to one channel,
+            # but keep the scanner object (and all its captured data) alive.
             scanner.stop()
             scanner.join(timeout=2)
 
@@ -964,8 +973,9 @@ def run_app(stdscr, iface, panes):
             if not go_back:
                 break
 
-            scanner = Scanner(iface)
-            scanner.start()
+            # Resume scanning — reuse the existing scanner so all previously
+            # discovered networks, clients and probes are still visible immediately.
+            scanner.restart()
 
     finally:
         try:
