@@ -5,11 +5,11 @@
 
 `airohunt-ng` is developed to allow you to scan for and track wireless 802.11 devices in real time. 
 
-Whether you want to fox hunt the location of a specific device with a Yagi, or test the efficacy of antenna placement, or types of antennam this software should hopefully be useful to you. 
+Whether you want to fox hunt the location of a specific device with a Yagi, or test the efficacy of antenna placement, or types of antenna this software should hopefully be useful to you. 
 
 The scanner window shows three panes, one for access points (routers), one for clients connected to access points, and one for probes being sent out by unassociated clients. Do note that probe requests are infrequently sent so the output will not be smooth.  
 
-The project was also my first experiment with using AI to develop software, it has been an interesting experience, and given me a lot of insight into what it is capable of. Consider the source code to this not my work, I can only take credit (or blame) for designing the interface and packaging it up. 
+The project was also my first experiment with using AI to develop software, it has been an interesting experience, and given me a lot of insight into what it is capable of. Consider the source code of this project not my work, I can only take credit (or blame) for designing the interface and packaging it up. 
 
 ![Scanner](screenshots/interface1.png)
 ![Tracker](screenshots/interface2.png)
