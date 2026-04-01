@@ -1,35 +1,30 @@
 # airohunt-ng
 
 > [!CAUTION]
-> This software was almost entirely written by Claude.ai Sonnet 4.6
+> Full disclosure, this software was almost entirely written by Claude.ai, Sonnet 4.6. 
 
-A terminal-based 802.11 Wi-Fi signal tracker for Linux that runs in monitor mode.
+`airohunt-ng` is developed to allow you to scan for and track wireless 802.11 devices in real time. 
 
-Displays access points, connected clients, and probe requests in a live three-pane
-interface, and lets you select any device to track its signal strength over time on
-a real-time graph.
+Whether you want to fox hunt the location of a specific device with a Yagi, or test the efficacy of antenna placement, or types of antennam this software should hopefully be useful to you. 
+
+The scanner window shows three panes, one for access points (routers), one for clients connected to access points, and one for probes being sent out by unassociated clients. Do note that probe requests are infrequently sent so the output will not be smooth.  
+
+The project was also my first experiment with using AI to develop software, it has been an interesting experience, and given me a lot of insight into what it is capable of. Consider the source code to this not my work, I can only take credit (or blame) for designing the interface and packaging it up. 
 
 ![Scanner](screenshots/interface1.png)
 ![Tracker](screenshots/interface2.png)
 
-## Requirements
-- monitor mode capable wireless interface
-- tcpdump
-- iw
-- Python 3.8+
-
 ## Installation
 
-### pip (recommended)
+### Arch Linux (AUR)
+```bash
+yay -S airohunt-ng
+```
+
+### pip 
 
 ```bash
 pip install airohunt-ng
-```
-
-### Arch Linux (AUR)
-
-```bash
-yay -S airohunt-ng
 ```
 
 ### From source
@@ -50,71 +45,44 @@ sudo iw dev wlan0 set type monitor
 sudo ip link set wlan0 up
 ```
 
-Then run:
+Then run the script, defaulting to 2.4Ghz:
 
-```bash
+```
 sudo airohunt-ng wlan0
 ```
 
-### Options
+Options: 
 
 ```
+This script must be run as root.
+
+usage: airohunt-ng [-h] [--band {2.4,5,both}] [-c CH] [--bssid MAC] [-A] [-C]
+                   [-P]
+                   interface
+
+WiFi signal strength monitor
+
 positional arguments:
-  interface          Monitor-mode interface (e.g. wlan0)
+  interface            Monitor-mode interface (e.g. wlan0)
 
 options:
+  -h, --help           show this help message and exit
   --band {2.4,5,both}  Band to scan: 2.4 GHz (default), 5 GHz, or both
-  -c CH, --channel CH  Lock to a single channel instead of hopping
-  --bssid MAC          Go straight to the signal graph for this BSSID (requires -c)
-  -A                   Show Access Points pane only
-  -C                   Show Connected Clients pane only
-  -P                   Show Probes pane only
+  -c, --channel CH     Lock to a single channel instead of hopping
+  --bssid MAC          Go straight to the signal graph for this BSSID
+                       (requires -c)
+  -A                   Show Access Points pane
+  -C                   Show Connected Clients pane
+  -P                   Show Probes pane
+
+Examples:
+  sudo airohunt-ng wlan0
+  sudo airohunt-ng wlan0 --band 5 -AC
+  sudo airohunt-ng wlan0 -c 6 --bssid BC:0F:9A:17:9E:EC
+        
 ```
 
-Pane flags may be combined: `-AC` shows Access Points and Connected Clients.
-
-### Key bindings
-
-| Key | Action |
-|-----|--------|
-| `h` / `l` or `←` / `→` | Switch active pane |
-| `j` / `k` or `↑` / `↓` | Scroll within pane |
-| `Enter` | Open signal graph for selected device |
-| `Space` | Pause / resume scanning |
-| `r` | Clear all results |
-| `q` | Quit |
-
-**Inside the signal graph:**
-
-| Key | Action |
-|-----|--------|
-| `Space` | Pause / resume |
-| `r` | Reset graph history |
-| `Esc` | Back to scanner |
-| `q` | Quit |
-
-## Encryption detection
-
-Encryption is determined by parsing the raw beacon frame bytes (RSN and WPA IEs),
-not just the verbose tcpdump output. The ENC column shows one of:
-
-| Value | Meaning |
-|-------|---------|
-| `OPN` | Open network |
-| `WEP` | WEP (Privacy bit set, no WPA/RSN IE) |
-| `WPA` | WPA1 (vendor IE `00:50:f2:01`) |
-| `WPA2-PSK` | WPA2 Personal (RSN IE, AKM type 2) |
-| `WPA2-EAP` | WPA2 Enterprise (RSN IE, AKM type 1) |
-| `WPA3-SAE` | WPA3 Personal (RSN IE, AKM type 8) |
-| `WPA3-OWE` | WPA3 Enhanced Open (RSN IE, AKM type 18) |
-| `WPA2/3` | Transition mode (both PSK and SAE advertised) |
-
-## License
-
-GNU General Public License v3.0 or later — see [LICENSE](LICENSE).
-
-
-## Deployment
+#### Deployment notes for the author
 ```
 Update version in __init__.py
 Update version in pyproject.toml 
