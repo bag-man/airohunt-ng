@@ -112,3 +112,20 @@ not just the verbose tcpdump output. The ENC column shows one of:
 ## License
 
 GNU General Public License v3.0 or later — see [LICENSE](LICENSE).
+
+
+## Deployment
+```
+Update version in __init__.py
+Update version in pyproject.toml 
+
+git commit -m "Release v1.0.x"
+git tag -a v1.0.1 -m "Release v1.0.x"
+git push && git push origin v1.0.x
+
+curl -sL https://github.com/bag-man/airohunt-ng/archive/v1.0.x.tar.gz | sha256sum
+Update pkgver and sha256sum in PKGBUILD, regenerate .SRCINFO with `makepkg --printsrcinfo > .SRCINFO`
+
+python -m build
+twine upload dist/*
+```
