@@ -24,6 +24,8 @@ from datetime import datetime
 
 # ── Configuration ─────────────────────────────────────────────────────────────
 
+CHANNELS        = []                   # populated at startup by get_channels()
+
 DWELL_S         = 0.5                  # seconds to listen per channel
 SAMPLE_INTERVAL = 0.1                  # graph: seconds averaged per plot point
 RENDER_HZ       = 10                   # UI refresh rate
@@ -32,105 +34,6 @@ Y_MIN           = -95                  # graph dBm floor
 Y_MAX           = -10                  # graph dBm ceiling
 Y_LABEL_W       = 5                    # width of Y-axis label column
 FUNCTIONAL_DBM  = -78                  # threshold line on graph
-
-CHANNELS        = []                   # populated at startup by get_channels()
-
-# ── Regulatory channel discovery ──────────────────────────────────────────────
-
-# Frequency ranges covered by each regulatory rule line, e.g.:
-#   (2402 - 2482 @ 40), ...
-_REG_RULE = re.compile(r"\((\d+)\s*-\s*(\d+)\s*@")
-
-
-def _freq_to_channel(freq):
-    """Convert a centre frequency in MHz to an 802.11 channel number, or None."""
-    if 2412 <= freq <= 2472:
-        return (freq - 2407) // 5
-    if freq == 2484:
-        return 14
-    if 5160 <= freq <= 5885:
-        return (freq - 5000) // 5
-    return None
-
-
-def _channels_in_band(start_mhz, end_mhz):
-    """
-    Return every standard 802.11 channel whose centre frequency falls within
-    [start_mhz, end_mhz].
-
-    2.4 GHz channels use 5 MHz spacing from channel 1 (2412 MHz).
-    5 GHz channels are numbered as (freq - 5000) / 5 with 20 MHz spacing,
-    so every 4th channel number (36, 40, 44, …).
-    """
-    channels = []
-    # 2.4 GHz: channels 1–14
-    for ch in range(1, 15):
-        freq = 2407 + ch * 5 if ch < 14 else 2484
-        if start_mhz <= freq <= end_mhz:
-            channels.append(ch)
-    # 5 GHz: standard 20 MHz channels, 36–177
-    for ch in range(36, 178, 4):
-        freq = 5000 + ch * 5
-        if start_mhz <= freq <= end_mhz:
-            channels.append(ch)
-    return channels
-
-
-def get_channels(iface, band="2.4"):
-    """
-    Query the regulatory domain via `iw reg get` and return the list of
-    permitted channels for the requested band.
-
-    Falls back to conservative built-in defaults if iw is unavailable or
-    returns no usable rules (e.g. regulatory domain not yet set).
-
-    band: "2.4" | "5" | "both"
-    """
-    _FALLBACK_2G = list(range(1, 12))   # safe worldwide minimum
-    _FALLBACK_5G = [36, 40, 44, 48, 149, 153, 157, 161, 165]
-
-    reg_text = ""
-    if shutil.which("iw"):
-        try:
-            # `iw reg get` returns the global regulatory domain.
-            # `iw phy <phy> reg get` would be per-PHY but requires mapping
-            # iface → phy, which `iw dev <iface> info` provides.
-            phy = None
-            info = subprocess.run(
-                ["iw", "dev", iface, "info"],
-                stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, text=True,
-            ).stdout
-            m = re.search(r"wiphy\s+(\d+)", info)
-            if m:
-                phy = f"phy{m.group(1)}"
-
-            cmd = ["iw", "phy", phy, "reg", "get"] if phy else ["iw", "reg", "get"]
-            reg_text = subprocess.run(
-                cmd,
-                stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, text=True,
-            ).stdout
-        except Exception:
-            pass
-
-    channels_2g, channels_5g = [], []
-    for m in _REG_RULE.finditer(reg_text):
-        start, end = int(m.group(1)), int(m.group(2))
-        if end > 6000:          # skip 6 GHz / 60 GHz bands
-            continue
-        for ch in _channels_in_band(start, end):
-            if ch <= 14:
-                channels_2g.append(ch)
-            else:
-                channels_5g.append(ch)
-
-    channels_2g = sorted(set(channels_2g)) or _FALLBACK_2G
-    channels_5g = sorted(set(channels_5g)) or _FALLBACK_5G
-
-    if band == "5":
-        return channels_5g
-    if band == "both":
-        return channels_2g + channels_5g
-    return channels_2g
 
 # ── Regex patterns (compiled once) ────────────────────────────────────────────
 
@@ -147,8 +50,105 @@ _BSSID      = re.compile(r"\bbssid:([0-9a-f]{2}(?::[0-9a-f]{2}){5})\b", re.I)
 _CH         = re.compile(r"\bch:\s*(\d+)", re.I)
 _TIMESTAMP  = re.compile(r"^\d{2}:\d{2}:\d{2}")
 _HEXLINE    = re.compile(r"^\s+0x[0-9a-f]+:\s+([0-9a-f ]+)", re.I)
+_REG_RULE   = re.compile(r"\((\d+)\s*-\s*(\d+)\s*@")
 
-# ── Data classes ──────────────────────────────────────────────────────────────
+# ── Regulatory channel discovery ──────────────────────────────────────────────
+
+# All standard 20 MHz primary channels in the 5 GHz band.
+# Listed explicitly because channel spacing is irregular across UNII sub-bands:
+# UNII-1/2/2C use multiples of 4 starting at 36, while UNII-3/4 start at 149
+# which is ≡ 1 mod 4 — a stride-based range(36, 178, 4) misses them entirely.
+_STANDARD_5G = [
+    36,  40,  44,  48,                                   # UNII-1
+    52,  56,  60,  64,                                   # UNII-2A
+    100, 104, 108, 112, 116, 120, 124, 128,              # UNII-2C
+    132, 136, 140, 144,                                  # UNII-2C (extended)
+    149, 153, 157, 161, 165,                             # UNII-3
+    169, 173, 177,                                       # UNII-4 (US/some regions)
+]
+
+
+def _channels_in_band(start_mhz, end_mhz):
+    """
+    Return standard 802.11 channels whose centre frequency falls within
+    [start_mhz, end_mhz].
+
+    2.4 GHz uses a bandwidth-aware check (centre ± 10 MHz must fit within the
+    band) because the US regulatory boundary at 2472 MHz sits exactly at the
+    centre of channel 13 — without the ± 10 check, channels 12 and 13 would
+    be incorrectly included.
+
+    5 GHz uses a centre-only check against the explicit standard channel list,
+    because regulatory band edges don't always align with ± half-bandwidth
+    boundaries (e.g. UNII-4 channel 169 at 5845 MHz sits within the
+    5730–5850 rule, but 5845 + 10 = 5855 > 5850 would wrongly exclude it).
+    """
+    half = 10
+    channels = []
+
+    # 2.4 GHz: bandwidth-aware
+    for ch in range(1, 15):
+        centre = 2407 + ch * 5 if ch < 14 else 2484
+        if centre - half >= start_mhz and centre + half <= end_mhz:
+            channels.append(ch)
+
+    # 5 GHz: centre-frequency check against known standard channels only
+    for ch in _STANDARD_5G:
+        centre = 5000 + ch * 5
+        if start_mhz <= centre <= end_mhz:
+            channels.append(ch)
+
+    return channels
+
+
+def get_channels(iface, band="2.4"):
+    """
+    Query the global regulatory domain via `iw reg get` and return the
+    permitted channels for the requested band.
+
+    The *global* entry is used intentionally rather than the per-PHY entry.
+    Self-managed adapters (e.g. mt7921u) report `country 00` for their own
+    PHY, which covers far more channels than actually permitted under the
+    active country setting. The global entry reflects what the kernel has
+    been told via `iw reg set` / CRDA and is what the driver enforces.
+
+    Falls back to conservative worldwide-safe defaults if iw is unavailable
+    or the domain returns no usable rules.
+    """
+    _FALLBACK_2G = list(range(1, 12))   # FCC minimum — safe worldwide
+    _FALLBACK_5G = [36, 40, 44, 48, 149, 153, 157, 161, 165]
+
+    reg_text = ""
+    if shutil.which("iw"):
+        try:
+            out = subprocess.run(
+                ["iw", "reg", "get"],
+                stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, text=True,
+            ).stdout
+            # iw reg get may return multiple blocks: "global" then "phy#N".
+            # Truncate at the first phy block so self-managed PHY entries
+            # (which report country 00) don't override the global rules.
+            phy_start = out.find("\nphy#")
+            reg_text = out[:phy_start] if phy_start != -1 else out
+        except Exception:
+            pass
+
+    channels_2g, channels_5g = [], []
+    for m in _REG_RULE.finditer(reg_text):
+        start, end = int(m.group(1)), int(m.group(2))
+        if end >= 6000:         # skip 6 GHz and 60 GHz bands
+            continue
+        for ch in _channels_in_band(start, end):
+            (channels_2g if ch <= 14 else channels_5g).append(ch)
+
+    channels_2g = sorted(set(channels_2g)) or _FALLBACK_2G
+    channels_5g = sorted(set(channels_5g)) or _FALLBACK_5G
+
+    if band == "5":
+        return channels_5g
+    if band == "both":
+        return channels_2g + channels_5g
+    return channels_2g
 
 class Network:
     """An access point discovered via beacon frames."""
@@ -1135,6 +1135,7 @@ Examples:
         CHANNELS = [args.channel]
     else:
         CHANNELS = get_channels(args.interface, band=args.band)
+    # else: 2.4 GHz default already set
 
     # ── Pane selection ────────────────────────────────────────────────────────
     # If no -A/-C/-P flags given, show all three.
